@@ -1,0 +1,6 @@
+{
+  "name": "Học Liệu Số: Thực Hành HTML & CSS",
+  "description": "Hệ thống bài giảng số và phòng thực hành tương tác HTML, CSS, Bootstrap và JavaScript dành cho sinh viên Cao đẳng Nghề Bách Khoa Hà Nội.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
