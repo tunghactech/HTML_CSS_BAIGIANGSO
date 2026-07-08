@@ -68,6 +68,9 @@ export default function App() {
   // Tab panels in textbook view
   const [workbookTab, setWorkbookTab] = useState<"details" | "objectives">("details");
 
+  // Tab panels inside Sandbox preview
+  const [previewTab, setPreviewTab] = useState<"user" | "solution">("user");
+
   // Interactive URL Parser game states
   const [urlAnswers, setUrlAnswers] = useState({
     protocol: "",
@@ -99,6 +102,7 @@ export default function App() {
     setUrlScore(null);
     setClassificationScore(null);
     setIsSolutionVisible(false);
+    setPreviewTab("user");
   }, [activeExercise, progress.savedCode]);
 
   // Persist progress to localStorage
@@ -1015,6 +1019,34 @@ export default function App() {
                           <span>{progress.completedExercises.includes(activeExercise.id) ? "Hoàn Thành ✓" : "Xong"}</span>
                         </button>
                       </div>
+
+                      {/* Expected product template display (user request) */}
+                      <div className="space-y-2 pt-3 border-t border-slate-850">
+                        <span className="text-[10px] font-bold text-amber-400 block uppercase font-mono flex items-center gap-1">
+                          <Camera className="w-3.5 h-3.5 text-rose-500" /> SẢN PHẨM CẦN ĐẠT ĐƯỢC
+                        </span>
+                        <div className="w-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex flex-col shadow-xl">
+                          <div className="bg-slate-950 px-2 py-1 flex items-center justify-between border-b border-slate-800 shrink-0">
+                            <span className="text-[9px] font-mono text-slate-500 truncate">mau_dat_chuan.html</span>
+                            <span className="text-[8px] font-mono bg-red-950 text-red-400 p-0.5 px-1.5 rounded font-bold shrink-0">MẪU CHUẨN</span>
+                          </div>
+                          <div className="bg-white h-[200px] overflow-hidden relative">
+                            <iframe
+                              key={`workspace-sol-${activeExercise.id}`}
+                              title="Workspace Expected Outcome"
+                              srcDoc={activeExercise.solutionCode}
+                              sandbox="allow-scripts"
+                              className="w-full h-full border-0 bg-white"
+                            />
+                            {/* Watermark representing design screenshot overlay */}
+                            <div className="absolute inset-0 bg-slate-950/5 pointer-events-none transition-all flex items-end p-2">
+                              <span className="bg-slate-900/90 text-slate-300 text-[8px] font-mono p-0.5 px-1 rounded border border-slate-800/40 backdrop-blur-sm">
+                                📷 Thiết kế mẫu đạt chuẩn
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1054,21 +1086,62 @@ export default function App() {
 
                 {/* Right Column: Live Sandbox Preview */}
                 <div className="flex-1 flex flex-col overflow-hidden bg-white min-h-[220px]">
-                  <div className="bg-slate-950 px-4 py-1.5 border-b border-slate-800 text-[10px] text-slate-400 font-mono flex justify-between items-center shrink-0">
+                  <div className="bg-slate-950 px-4 py-1.5 border-b border-slate-800 text-[10px] text-slate-400 font-mono flex flex-wrap justify-between items-center shrink-0 gap-3">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                      <span>BẢN XEM TRƯỚC SẢN PHẨM THỰC TẾ (SANDBOX PREVIEW)</span>
+                      <span>BẢN XEM TRƯỚC SẢN PHẨM</span>
                     </span>
-                    <span className="text-slate-500 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-900 font-sans border border-slate-800">SỐNG</span>
+                    
+                    {/* Tabs for toggling user output and standard solution preview */}
+                    <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
+                      <button
+                        onClick={() => setPreviewTab("user")}
+                        className={`px-3 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                          previewTab === "user"
+                            ? "bg-red-700 text-white font-extrabold shadow-sm"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Bài làm của bạn
+                      </button>
+                      <button
+                        onClick={() => setPreviewTab("solution")}
+                        className={`px-3 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                          previewTab === "solution"
+                            ? "bg-amber-600 text-slate-950 font-extrabold shadow-sm"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                      >
+                        Mẫu cần đạt
+                      </button>
+                    </div>
                   </div>
                   
-                  <iframe
-                    key={previewKey}
-                    title="Try It Yourself Sandbox"
-                    srcDoc={currentCode}
-                    sandbox="allow-scripts"
-                    className="flex-1 w-full border-0 bg-white"
-                  />
+                  {previewTab === "user" ? (
+                    <iframe
+                      key={previewKey}
+                      title="Try It Yourself Sandbox"
+                      srcDoc={currentCode}
+                      sandbox="allow-scripts"
+                      className="flex-1 w-full border-0 bg-white"
+                    />
+                  ) : (
+                    <div className="flex-1 w-full relative">
+                      <iframe
+                        key={`workspace-preview-sol-${activeExercise.id}`}
+                        title="Workspace Solution Preview"
+                        srcDoc={activeExercise.solutionCode}
+                        sandbox="allow-scripts"
+                        className="w-full h-full border-0 bg-white"
+                      />
+                      {/* Watermark representing design screenshot overlay */}
+                      <div className="absolute inset-0 bg-slate-950/5 pointer-events-none transition-all flex items-end p-4">
+                        <span className="bg-slate-900/90 text-slate-300 text-[9px] font-mono p-1 px-2 rounded border border-slate-800/40 backdrop-blur-sm">
+                          📷 Bản thiết kế đạt chuẩn cần đạt
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
               </div>
