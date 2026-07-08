@@ -333,7 +333,7 @@ export default function App() {
               <span className="text-xs text-slate-400 font-mono">BÀI GIẢNG SỐ TƯƠNG TÁC</span>
             </div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Thực Hành Thiết Kế & Lập Trình Web <span className="text-sm font-normal text-slate-400 hidden sm:inline">(Hệ Cao Đẳng)</span>
+              Môn học thực hành HTML & CSS <span className="text-sm font-normal text-slate-400 hidden sm:inline">(Hệ Cao Đẳng)</span>
             </h1>
           </div>
         </div>
