@@ -24,7 +24,11 @@ import {
   ExternalLink,
   Camera,
   Laptop,
-  ChevronLeft
+  ChevronLeft,
+  Maximize2,
+  Monitor,
+  Tablet,
+  Smartphone
 } from "lucide-react";
 import { CURRICULUM_DATA } from "./data/lessons";
 import { Exercise, Lesson, StudentProgress } from "./types";
@@ -70,6 +74,13 @@ export default function App() {
 
   // Tab panels inside Sandbox preview
   const [previewTab, setPreviewTab] = useState<"user" | "solution">("user");
+
+  // Modern interactive workspace preview layouts: "split" (song song), "user" (chỉ bài làm), "solution" (chỉ hình mẫu)
+  const [previewMode, setPreviewMode] = useState<"split" | "user" | "solution">("split");
+  const [isZoomModalOpen, setIsZoomModalOpen] = useState(false);
+  const [zoomDeviceWidth, setZoomDeviceWidth] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const [isHoveringSpecimen, setIsHoveringSpecimen] = useState(false);
+  const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
 
   // Interactive URL Parser game states
   const [urlAnswers, setUrlAnswers] = useState({
@@ -1022,13 +1033,21 @@ export default function App() {
 
                       {/* Expected product template display (user request) */}
                       <div className="space-y-2 pt-3 border-t border-slate-850">
-                        <span className="text-[10px] font-bold text-amber-400 block uppercase font-mono flex items-center gap-1">
-                          <Camera className="w-3.5 h-3.5 text-rose-500" /> SẢN PHẨM CẦN ĐẠT ĐƯỢC
-                        </span>
-                        <div className="w-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex flex-col shadow-xl">
-                          <div className="bg-slate-950 px-2 py-1 flex items-center justify-between border-b border-slate-800 shrink-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-amber-400 uppercase font-mono flex items-center gap-1">
+                            <Camera className="w-3.5 h-3.5 text-rose-500" /> SẢN PHẨM CẦN ĐẠT ĐƯỢC
+                          </span>
+                          <button
+                            onClick={() => setIsZoomModalOpen(true)}
+                            className="text-[9px] font-bold text-red-400 hover:text-red-300 flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <Maximize2 className="w-2.5 h-2.5" /> Phóng To
+                          </button>
+                        </div>
+                        <div className="w-full bg-slate-900 border border-slate-800 rounded-lg overflow-hidden flex flex-col shadow-xl group relative">
+                          <div className="bg-slate-950 px-2 py-1.5 flex items-center justify-between border-b border-slate-800 shrink-0">
                             <span className="text-[9px] font-mono text-slate-500 truncate">mau_dat_chuan.html</span>
-                            <span className="text-[8px] font-mono bg-red-950 text-red-400 p-0.5 px-1.5 rounded font-bold shrink-0">MẪU CHUẨN</span>
+                            <span className="text-[8px] font-mono bg-amber-950 text-amber-400 p-0.5 px-1.5 rounded font-bold shrink-0">BẢN MẪU</span>
                           </div>
                           <div className="bg-white h-[200px] overflow-hidden relative">
                             <iframe
@@ -1038,10 +1057,23 @@ export default function App() {
                               sandbox="allow-scripts"
                               className="w-full h-full border-0 bg-white"
                             />
+                            
+                            {/* Clickable Overlay to open detailed zoom board */}
+                            <div 
+                              onClick={() => setIsZoomModalOpen(true)}
+                              className="absolute inset-0 bg-slate-950/0 group-hover:bg-slate-950/40 transition-all flex flex-col items-center justify-center p-3 cursor-zoom-in text-center opacity-0 group-hover:opacity-100 duration-200"
+                            >
+                              <div className="bg-red-600 text-white p-1.5 rounded-full shadow-lg mb-1 animate-bounce">
+                                <Maximize2 className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="text-[10px] font-bold text-white shadow-sm">Xem phóng to & So sánh</span>
+                              <span className="text-[8px] text-slate-300 font-mono mt-0.5">Hỗ trợ Desktop, Tablet, Mobile</span>
+                            </div>
+
                             {/* Watermark representing design screenshot overlay */}
-                            <div className="absolute inset-0 bg-slate-950/5 pointer-events-none transition-all flex items-end p-2">
-                              <span className="bg-slate-900/90 text-slate-300 text-[8px] font-mono p-0.5 px-1 rounded border border-slate-800/40 backdrop-blur-sm">
-                                📷 Thiết kế mẫu đạt chuẩn
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-2 pointer-events-none transition-opacity group-hover:opacity-0">
+                              <span className="bg-slate-900/95 text-slate-300 text-[8px] font-mono p-0.5 px-1.5 rounded border border-slate-800/40 backdrop-blur-sm">
+                                📷 Click để phóng to chi tiết
                               </span>
                             </div>
                           </div>
@@ -1084,40 +1116,160 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Right Column: Live Sandbox Preview */}
-                <div className="flex-1 flex flex-col overflow-hidden bg-white min-h-[220px]">
-                  <div className="bg-slate-950 px-4 py-1.5 border-b border-slate-800 text-[10px] text-slate-400 font-mono flex flex-wrap justify-between items-center shrink-0 gap-3">
+                {/* Right Column: Live Sandbox Preview with Song Song (Split Screen) & Magnifier */}
+                <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 min-h-[220px]">
+                  <div className="bg-slate-950 px-4 py-2 border-b border-slate-800 text-[10px] text-slate-400 font-mono flex flex-wrap justify-between items-center shrink-0 gap-3">
                     <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" />
-                      <span>BẢN XEM TRƯỚC SẢN PHẨM</span>
+                      <span className="font-bold">BẢN XEM TRƯỚC VÀ SO SÁNH</span>
                     </span>
                     
-                    {/* Tabs for toggling user output and standard solution preview */}
+                    {/* Segmented controls for switching between side-by-side split, student work, and reference design */}
                     <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
                       <button
-                        onClick={() => setPreviewTab("user")}
-                        className={`px-3 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
-                          previewTab === "user"
+                        onClick={() => setPreviewMode("split")}
+                        className={`px-3 py-1 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                          previewMode === "split"
                             ? "bg-red-700 text-white font-extrabold shadow-sm"
                             : "text-slate-400 hover:text-slate-200"
                         }`}
+                        title="Xem song song hai bản mẫu để dễ so sánh"
+                      >
+                        📊 Xem song song (Mới)
+                      </button>
+                      <button
+                        onClick={() => setPreviewMode("user")}
+                        className={`px-3 py-1 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                          previewMode === "user"
+                            ? "bg-slate-800 text-emerald-400 font-extrabold shadow-sm border border-emerald-500/20"
+                            : "text-slate-400 hover:text-slate-200"
+                        }`}
+                        title="Chỉ hiển thị bài làm của học viên"
                       >
                         Bài làm của bạn
                       </button>
                       <button
-                        onClick={() => setPreviewTab("solution")}
-                        className={`px-3 py-0.5 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
-                          previewTab === "solution"
-                            ? "bg-amber-600 text-slate-950 font-extrabold shadow-sm"
+                        onClick={() => setPreviewMode("solution")}
+                        className={`px-3 py-1 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                          previewMode === "solution"
+                            ? "bg-slate-800 text-amber-400 font-extrabold shadow-sm border border-amber-500/20"
                             : "text-slate-400 hover:text-slate-200"
                         }`}
+                        title="Chỉ hiển thị thiết kế mẫu"
                       >
                         Mẫu cần đạt
                       </button>
                     </div>
                   </div>
                   
-                  {previewTab === "user" ? (
+                  {/* Render based on layout selection */}
+                  {previewMode === "split" ? (
+                    <div className="flex-1 w-full flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-800 bg-slate-900">
+                      {/* Left Split Pane: Reference Standard Solution (Mẫu đạt chuẩn) */}
+                      <div className="flex-1 flex flex-col min-h-[180px] bg-white relative">
+                        <div className="bg-slate-950 text-amber-400 text-[10px] font-mono px-3 py-1.5 flex items-center justify-between border-b border-slate-850 select-none">
+                          <span className="flex items-center gap-1 font-bold">
+                            <Camera className="w-3 h-3 text-rose-500" /> THIẾT KẾ MẪU CẦN ĐẠT
+                          </span>
+                          <button 
+                            onClick={() => setIsZoomModalOpen(true)}
+                            className="text-[9px] bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:text-white rounded p-0.5 px-2 font-bold cursor-pointer transition-colors"
+                          >
+                            🔍 Phóng to giả lập
+                          </button>
+                        </div>
+                        
+                        {/* Hover Magnifier glass container */}
+                        <div 
+                          className="flex-1 relative w-full h-full overflow-hidden bg-white"
+                          onMouseMove={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+                            setHoverPosition({ x, y });
+                          }}
+                          onMouseEnter={() => setIsHoveringSpecimen(true)}
+                          onMouseLeave={() => setIsHoveringSpecimen(false)}
+                        >
+                          <iframe
+                            key={`workspace-preview-sol-split-${activeExercise.id}`}
+                            title="Workspace Split Reference Solution"
+                            srcDoc={activeExercise.solutionCode}
+                            sandbox="allow-scripts"
+                            className="w-full h-full border-0 bg-white"
+                          />
+                          
+                          {/* Transparent overlay blocks iframe interactions to capture hover events and click-to-zoom */}
+                          <div 
+                            onClick={() => setIsZoomModalOpen(true)}
+                            className="absolute inset-0 bg-transparent z-10 cursor-zoom-in" 
+                          />
+
+                          {/* Watermark sign */}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 to-transparent p-2 pointer-events-none z-20 flex justify-between items-center">
+                            <span className="bg-slate-900/95 text-slate-300 text-[8px] font-mono p-0.5 px-1.5 rounded border border-slate-800/40 backdrop-blur-sm">
+                              📷 Rê chuột để soi kính lúp • Click để phóng to
+                            </span>
+                          </div>
+
+                          {/* Magnifier Glass overlay box */}
+                          {isHoveringSpecimen && (
+                            <div 
+                              className="absolute z-50 pointer-events-none border-4 border-amber-500 rounded-lg shadow-2xl bg-white overflow-hidden flex flex-col transition-all"
+                              style={{
+                                width: '280px',
+                                height: '200px',
+                                left: Math.min(Math.max(10, hoverPosition.x - 140), 280) + 'px', 
+                                top: Math.min(Math.max(10, hoverPosition.y - 100), 200) + 'px',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+                              }}
+                            >
+                              <div className="bg-amber-500 text-slate-950 font-mono font-bold text-[8px] px-2 py-0.5 flex justify-between items-center select-none shrink-0">
+                                <span className="flex items-center gap-1">🔍 KÍNH LÚP SẢN PHẨM MẪU</span>
+                                <span>2.0x Scale</span>
+                              </div>
+                              <div className="flex-1 bg-white relative overflow-hidden">
+                                <div 
+                                  style={{
+                                    width: '200%',
+                                    height: '200%',
+                                    transform: `translate(${-hoverPosition.x * 2 + 140}px, ${-hoverPosition.y * 2 + 100}px)`,
+                                    transformOrigin: 'top left',
+                                  }}
+                                  className="absolute"
+                                >
+                                  <iframe
+                                    key={`split-magnifier-iframe-${activeExercise.id}`}
+                                    title="Split Magnifier Specimen"
+                                    srcDoc={activeExercise.solutionCode}
+                                    sandbox="allow-scripts"
+                                    className="w-full h-full border-0 pointer-events-none"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Split Pane: Student Live Preview Sandbox (Bài làm của bạn) */}
+                      <div className="flex-1 flex flex-col min-h-[180px] bg-white">
+                        <div className="bg-slate-950 text-emerald-400 text-[10px] font-mono px-3 py-1.5 flex items-center justify-between border-b border-slate-850 select-none">
+                          <span className="flex items-center gap-1 font-bold">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" /> BÀI LÀM CỦA BẠN (BẢN CHẠY THỰC TẾ)
+                          </span>
+                          <span className="text-[9px] text-slate-500">Live View</span>
+                        </div>
+                        <iframe
+                          key={previewKey}
+                          title="Split Preview Live"
+                          srcDoc={currentCode}
+                          sandbox="allow-scripts"
+                          className="flex-1 w-full border-0 bg-white"
+                        />
+                      </div>
+                    </div>
+                  ) : previewMode === "user" ? (
                     <iframe
                       key={previewKey}
                       title="Try It Yourself Sandbox"
@@ -1126,19 +1278,83 @@ export default function App() {
                       className="flex-1 w-full border-0 bg-white"
                     />
                   ) : (
-                    <div className="flex-1 w-full relative">
-                      <iframe
-                        key={`workspace-preview-sol-${activeExercise.id}`}
-                        title="Workspace Solution Preview"
-                        srcDoc={activeExercise.solutionCode}
-                        sandbox="allow-scripts"
-                        className="w-full h-full border-0 bg-white"
-                      />
-                      {/* Watermark representing design screenshot overlay */}
-                      <div className="absolute inset-0 bg-slate-950/5 pointer-events-none transition-all flex items-end p-4">
-                        <span className="bg-slate-900/90 text-slate-300 text-[9px] font-mono p-1 px-2 rounded border border-slate-800/40 backdrop-blur-sm">
-                          📷 Bản thiết kế đạt chuẩn cần đạt
-                        </span>
+                    <div className="flex-1 w-full relative bg-white">
+                      {/* Full-width specimen with lens */}
+                      <div 
+                        className="w-full h-full relative overflow-hidden"
+                        onMouseMove={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const x = e.clientX - rect.left;
+                          const y = e.clientY - rect.top;
+                          setHoverPosition({ x, y });
+                        }}
+                        onMouseEnter={() => setIsHoveringSpecimen(true)}
+                        onMouseLeave={() => setIsHoveringSpecimen(false)}
+                      >
+                        <iframe
+                          key={`workspace-preview-sol-full-${activeExercise.id}`}
+                          title="Workspace Solution Preview"
+                          srcDoc={activeExercise.solutionCode}
+                          sandbox="allow-scripts"
+                          className="w-full h-full border-0 bg-white"
+                        />
+                        
+                        {/* Event interceptor overlay */}
+                        <div 
+                          onClick={() => setIsZoomModalOpen(true)}
+                          className="absolute inset-0 bg-transparent z-10 cursor-zoom-in" 
+                        />
+
+                        {/* Watermark representing design screenshot overlay */}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/80 to-transparent p-4 pointer-events-none z-20 flex justify-between items-center">
+                          <span className="bg-slate-900/95 text-slate-300 text-[9px] font-mono p-1 px-2.5 rounded border border-slate-800/40 backdrop-blur-sm flex items-center gap-1">
+                            📷 Bản thiết kế chuẩn cần đạt • Rê chuột để soi kính lúp • Click để phóng to
+                          </span>
+                          <button
+                            onClick={() => setIsZoomModalOpen(true)}
+                            className="bg-amber-600 text-slate-950 p-1 px-3 rounded text-[10px] font-bold pointer-events-auto cursor-pointer shadow-lg hover:bg-amber-500 transition-colors"
+                          >
+                            🔍 Giả lập đa thiết bị
+                          </button>
+                        </div>
+
+                        {/* Magnifier glass lens */}
+                        {isHoveringSpecimen && (
+                          <div 
+                            className="absolute z-50 pointer-events-none border-4 border-amber-500 rounded-lg shadow-2xl bg-white overflow-hidden flex flex-col transition-all"
+                            style={{
+                              width: '320px',
+                              height: '240px',
+                              left: Math.min(hoverPosition.x + 20, 500) + 'px', 
+                              top: Math.max(10, hoverPosition.y - 120) + 'px',
+                              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
+                            }}
+                          >
+                            <div className="bg-amber-500 text-slate-950 font-mono font-bold text-[9px] px-2 py-1 flex justify-between items-center shrink-0">
+                              <span>🔍 KÍNH LÚP SẢN PHẨM MẪU</span>
+                              <span>2.0x zoom</span>
+                            </div>
+                            <div className="flex-1 bg-white relative overflow-hidden">
+                              <div 
+                                style={{
+                                  width: '200%',
+                                  height: '200%',
+                                  transform: `translate(${-hoverPosition.x * 2 + 160}px, ${-hoverPosition.y * 2 + 120}px)`,
+                                  transformOrigin: 'top left',
+                                }}
+                                className="absolute"
+                              >
+                                <iframe
+                                  key={`full-magnifier-iframe-${activeExercise.id}`}
+                                  title="Full Magnifier Specimen"
+                                  srcDoc={activeExercise.solutionCode}
+                                  sandbox="allow-scripts"
+                                  className="w-full h-full border-0 pointer-events-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1146,6 +1362,148 @@ export default function App() {
 
               </div>
 
+            </div>
+          )}
+
+          {/* Zoom & Inspect Design Spec Modal (Multi-Device Simulator) */}
+          {isWorkspaceOpen && isZoomModalOpen && (
+            <div className="fixed inset-0 bg-slate-950/95 z-[9999] flex flex-col items-center justify-center p-4 md:p-6 backdrop-blur-md">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden w-full max-w-6xl h-[90vh] flex flex-col shadow-2xl relative">
+                
+                {/* Modal Header */}
+                <div className="bg-slate-950 px-4 py-3 border-b border-slate-800 flex flex-wrap gap-3 items-center justify-between shrink-0">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-amber-500/10 text-amber-400 rounded border border-amber-500/20">
+                      <Camera className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white uppercase tracking-wider font-sans">
+                        Giả Lập & So Sánh Thiết Kế Đạt Chuẩn
+                      </h3>
+                      <p className="text-[9px] text-slate-400 font-mono">Bài tập: {activeExercise.title}</p>
+                    </div>
+                  </div>
+
+                  {/* Device selectors */}
+                  <div className="flex bg-slate-900 p-0.5 rounded-lg border border-slate-800 shrink-0">
+                    <button
+                      onClick={() => setZoomDeviceWidth("desktop")}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                        zoomDeviceWidth === "desktop"
+                          ? "bg-red-700 text-white font-extrabold shadow-sm"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <Monitor className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Máy Tính (Desktop)</span>
+                    </button>
+                    <button
+                      onClick={() => setZoomDeviceWidth("tablet")}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                        zoomDeviceWidth === "tablet"
+                          ? "bg-amber-600 text-slate-950 font-extrabold shadow-sm"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <Tablet className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Máy tính bảng</span>
+                    </button>
+                    <button
+                      onClick={() => setZoomDeviceWidth("mobile")}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer ${
+                        zoomDeviceWidth === "mobile"
+                          ? "bg-rose-600 text-white font-extrabold shadow-sm"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span className="hidden sm:inline">Điện thoại</span>
+                    </button>
+                  </div>
+
+                  {/* Close button */}
+                  <button
+                    onClick={() => setIsZoomModalOpen(false)}
+                    className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-800 transition-colors cursor-pointer"
+                    title="Đóng cửa sổ"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Modal Workspace Area */}
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-950">
+                  
+                  {/* Left side: Guide / Requirements check */}
+                  <div className="w-full md:w-80 bg-slate-900/40 border-b md:border-b-0 md:border-r border-slate-800 p-4 overflow-y-auto flex flex-col gap-4 shrink-0">
+                    <div>
+                      <span className="text-[10px] font-bold text-amber-400 block uppercase font-mono mb-1">MÔ TẢ BÀI TẬP:</span>
+                      <p className="text-xs text-slate-300 leading-relaxed font-sans">{activeExercise.description}</p>
+                    </div>
+
+                    <div className="space-y-2 pt-3 border-t border-slate-800/60">
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase font-mono">TIÊU CHÍ KỸ THUẬT:</span>
+                      <ul className="space-y-2">
+                        {activeExercise.instructions.map((step, idx) => (
+                          <li key={idx} className="flex gap-2 text-xs leading-relaxed text-slate-400">
+                            <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{step}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="mt-auto bg-slate-950 p-3 rounded-lg border border-slate-800/80 text-[11px] text-slate-400 space-y-1">
+                      <span className="font-bold text-rose-450 block font-mono text-[9px] uppercase">💡 MẸO THIẾT KẾ:</span>
+                      <p className="leading-relaxed">Thay đổi kích thước giả lập để quan sát cách bố cục co giãn. So sánh font chữ, khoảng cách lề và kích thước phần tử để đạt kết quả chuẩn xác 100%.</p>
+                    </div>
+                  </div>
+
+                  {/* Right side: Interactive Device Simulator Container */}
+                  <div className="flex-1 bg-slate-900/10 p-4 md:p-8 flex items-center justify-center overflow-auto">
+                    <div 
+                      className="bg-white rounded-xl shadow-2xl border-4 border-slate-950 overflow-hidden flex flex-col transition-all duration-300 relative"
+                      style={{
+                        width: zoomDeviceWidth === "desktop" ? "100%" : zoomDeviceWidth === "tablet" ? "768px" : "375px",
+                        maxWidth: "100%",
+                        height: "100%",
+                        maxHeight: "600px",
+                        boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.8)"
+                      }}
+                    >
+                      {/* Browser Header Bar */}
+                      <div className="bg-slate-100 border-b border-slate-200 px-3 py-2 flex items-center gap-1.5 shrink-0 select-none">
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                        <div className="bg-white text-slate-400 text-[10px] font-mono px-3 py-0.5 rounded border border-slate-200 flex-1 text-center truncate ml-4 flex items-center justify-center gap-1">
+                          <span>https://localhost/mau_dat_chuan_da_thiet_bi.html</span>
+                          <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1 rounded uppercase scale-90">REF</span>
+                        </div>
+                      </div>
+
+                      {/* Simulator Frame */}
+                      <div className="flex-1 bg-white relative">
+                        <iframe
+                          key={`zoom-frame-sol-${activeExercise.id}-${zoomDeviceWidth}`}
+                          title="Detailed Zoom Specimen"
+                          srcDoc={activeExercise.solutionCode}
+                          sandbox="allow-scripts"
+                          className="w-full h-full border-0 bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Modal Footer status banner */}
+                <div className="bg-slate-950 border-t border-slate-800 px-4 py-2 text-[10px] text-slate-500 font-mono flex justify-between items-center shrink-0">
+                  <span>GIẢ LẬP ĐẠT CHUẨN ĐÃ KÍCH HOẠT</span>
+                  <span>Độ rộng màn hình mô phỏng: {zoomDeviceWidth === "desktop" ? "100% (Desktop)" : zoomDeviceWidth === "tablet" ? "768px (Tablet)" : "375px (Mobile)"}</span>
+                </div>
+
+              </div>
             </div>
           )}
 
