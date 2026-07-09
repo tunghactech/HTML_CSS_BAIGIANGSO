@@ -835,7 +835,7 @@ export default function App() {
               {/* Right Column: Screenshot/Output Mockup of Expected Product & Action Launcher */}
               <div className="flex-1 md:w-[50%] flex flex-col bg-slate-950 p-6 overflow-y-auto">
                 
-                <div className="flex-1 flex flex-col justify-center items-center max-w-2xl mx-auto w-full space-y-6">
+                <div className="flex-1 flex flex-col justify-start items-center max-w-2xl mx-auto w-full space-y-6">
                   
                   {/* Photo Title & Indicator */}
                   <div className="text-center space-y-1 w-full">
