@@ -977,36 +977,48 @@ export default function App() {
                 
                 {/* Horizontal Instructions & Reference Panel on top */}
                 {showWorkspaceInstructions && (
-                  <div className="w-full bg-slate-950 border-b border-slate-800 flex flex-col md:flex-row shrink-0 divide-y md:divide-y-0 md:divide-x divide-slate-800 h-auto md:h-[195px] overflow-hidden">
+                  <div className="w-full bg-slate-950 border-b border-slate-800 flex flex-col lg:flex-row shrink-0 divide-y lg:divide-y-0 lg:divide-x divide-slate-800 h-auto overflow-hidden">
                     
                     {/* Left Pane: Compact Instructions, Steps, & Hint */}
-                    <div className="flex-1 p-3.5 overflow-y-auto flex flex-col md:flex-row gap-4 scrollbar-thin min-w-0">
+                    <div className="flex-1 p-4 overflow-y-auto flex flex-col md:flex-row flex-wrap xl:flex-nowrap gap-5 scrollbar-thin min-w-0 max-h-[350px] lg:max-h-[250px]">
                       
                       {/* Exercise Description & Hint */}
-                      <div className="flex-[4] min-w-[200px] space-y-2">
+                      <div className="flex-1 md:flex-[5] min-w-[250px] space-y-2">
                         <div className="flex items-center gap-1.5 shrink-0">
                           <Info className="w-3.5 h-3.5 text-red-500" />
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                            HƯỚNG DẪN THỰC HÀNH
+                            HƯỚNG DẪN & VÍ DỤ MINH HỌA
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-300 leading-relaxed font-sans">{activeExercise.description}</p>
                         
                         {/* Instructor Code Hint */}
-                        <div className="bg-slate-900/60 p-2.5 rounded border border-slate-800 space-y-1 text-[10px]">
-                          <span className="font-bold text-amber-400 block uppercase tracking-wider font-mono text-[9px]">Gợi ý từ Giảng Viên:</span>
-                          <p className="text-slate-400 leading-relaxed text-[10px]">{exerciseExamples.note}</p>
-                          <button 
-                            onClick={() => handleCopyCode(exerciseExamples.example)}
-                            className="text-red-400 hover:text-red-300 flex items-center gap-1 font-sans font-bold uppercase pt-0.5 text-[9px] cursor-pointer bg-transparent border-0"
-                          >
-                            <Copy className="w-2.5 h-2.5" /> Chép mẫu ví dụ
-                          </button>
+                        <div className="bg-slate-900/60 p-2.5 rounded border border-slate-800/80 space-y-2 text-[10px]">
+                          <div>
+                            <span className="font-bold text-amber-400 block uppercase tracking-wider font-mono text-[9px] mb-0.5">Gợi ý từ Giảng Viên:</span>
+                            <p className="text-slate-400 leading-relaxed text-[10px]">{exerciseExamples.note}</p>
+                          </div>
+                          
+                          {/* Live interactive example view */}
+                          <div className="space-y-1 pt-1.5 border-t border-slate-800/60">
+                            <div className="flex justify-between items-center text-[8px] text-slate-500 font-mono">
+                              <span>VÍ DỤ CODE MẪU:</span>
+                              <button 
+                                onClick={() => handleCopyCode(exerciseExamples.example)}
+                                className="text-red-400 hover:text-red-300 flex items-center gap-1 font-sans font-bold uppercase text-[8px] cursor-pointer bg-transparent border-0"
+                              >
+                                <Copy className="w-2.5 h-2.5" /> Sao chép ví dụ
+                              </button>
+                            </div>
+                            <pre className="p-2 bg-slate-950 text-emerald-400 rounded border border-slate-850 font-mono text-[10px] leading-relaxed overflow-x-auto max-h-[90px] scrollbar-thin select-all">
+                              {exerciseExamples.example}
+                            </pre>
+                          </div>
                         </div>
                       </div>
 
                       {/* Steps List */}
-                      <div className="flex-[4] min-w-[200px] space-y-2 border-t md:border-t-0 md:border-l border-slate-850 pt-2.5 md:pt-0 md:pl-4">
+                      <div className="flex-1 md:flex-[4] min-w-[240px] space-y-2 border-t md:border-t-0 md:border-l border-slate-850 pt-3 md:pt-0 md:pl-4">
                         <span className="text-[10px] font-bold text-slate-400 block uppercase font-mono">Các bước thực hiện:</span>
                         <ul className="space-y-1.5">
                           {activeExercise.instructions.map((step, idx) => (
@@ -1021,21 +1033,21 @@ export default function App() {
                       </div>
 
                       {/* Quick Status / Finish check */}
-                      <div className="flex-[2] min-w-[130px] flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-850 pt-2.5 md:pt-0 md:pl-4">
+                      <div className="flex-1 md:flex-[2.5] min-w-[150px] flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-850 pt-3 md:pt-0 md:pl-4">
                         <div className="space-y-1">
                           <span className="text-[10px] font-bold text-slate-400 block uppercase font-mono">TIẾN ĐỘ:</span>
                           <p className="text-[10px] text-slate-500">Hoàn thành các tiêu chí kỹ thuật trước khi chuyển bài.</p>
                         </div>
-                        <div className="pt-2">
+                        <div className="pt-3">
                           <button 
                             onClick={() => handleToggleCompleteExercise(activeExercise.id)}
-                            className={`w-full flex items-center justify-center gap-1 p-1.5 rounded-md text-[10px] font-bold transition-all cursor-pointer border ${
+                            className={`w-full flex items-center justify-center gap-1.5 p-2 rounded-md text-[10px] font-bold transition-all cursor-pointer border ${
                               progress.completedExercises.includes(activeExercise.id)
-                                ? "bg-emerald-600/25 text-emerald-400 border-emerald-500/30"
+                                ? "bg-emerald-600/25 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30"
                                 : "bg-slate-900 hover:bg-slate-850 text-slate-400 border-slate-800"
                             }`}
                           >
-                            <Check className="w-3 h-3" />
+                            <Check className="w-3.5 h-3.5" />
                             <span>{progress.completedExercises.includes(activeExercise.id) ? "Hoàn Thành ✓" : "Xong"}</span>
                           </button>
                         </div>
@@ -1044,7 +1056,7 @@ export default function App() {
                     </div>
 
                     {/* Right Pane: Expected Product Standard Specimen (Ảnh mẫu) with hover magnifier and magnifying popup */}
-                    <div className="w-full md:w-[280px] lg:w-[320px] shrink-0 bg-slate-900 flex flex-col overflow-hidden relative group">
+                    <div className="w-full lg:w-[280px] xl:w-[320px] shrink-0 bg-slate-900 flex flex-col overflow-hidden relative group min-h-[150px] lg:min-h-0">
                       <div className="bg-slate-950 px-3 py-1.5 flex items-center justify-between border-b border-slate-800 shrink-0 select-none">
                         <span className="text-[10px] font-bold text-amber-400 uppercase font-mono flex items-center gap-1">
                           <Camera className="w-3.5 h-3.5 text-rose-500" /> SẢN PHẨM MẪU CẦN ĐẠT
