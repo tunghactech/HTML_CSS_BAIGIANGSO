@@ -64,6 +64,20 @@ export default function App() {
   const [previewKey, setPreviewKey] = useState(0); // For forcing iframe re-render
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
+  // Auto-close sidebar on smaller screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  
   // Interactive Workspace State (True when editor is expanded/opened for active exercise)
   const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
   const [isSolutionVisible, setIsSolutionVisible] = useState(false);
@@ -337,19 +351,31 @@ export default function App() {
       )}
 
       {/* Main Header */}
-      <header className="bg-slate-950 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-md shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-red-700 rounded-lg flex items-center justify-center shadow-lg border border-red-500 shrink-0">
-            <GraduationCap className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs bg-red-800 text-red-100 px-2 py-0.5 rounded font-mono font-bold">HACTECH CNTT</span>
-              <span className="text-xs text-slate-400 font-mono">BÀI GIẢNG SỐ TƯƠNG TÁC</span>
+      <header className="bg-slate-950 border-b border-slate-800 px-4 md:px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4 shadow-md shrink-0">
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger toggle button */}
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 lg:hidden focus:outline-none transition-colors"
+              aria-label="Mở danh mục"
+              title="Danh mục bài học"
+            >
+              <Layers className="w-5 h-5" />
+            </button>
+
+            <div className="w-10 h-10 bg-red-700 rounded-lg flex items-center justify-center shadow-lg border border-red-500 shrink-0">
+              <GraduationCap className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Môn học thực hành HTML & CSS <span className="text-sm font-normal text-slate-400 hidden sm:inline">(Hệ Cao Đẳng)</span>
-            </h1>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] bg-red-800 text-red-100 px-1.5 py-0.5 rounded font-mono font-bold">HACTECH CNTT</span>
+                <span className="text-[10px] text-slate-400 font-mono">BÀI GIẢNG SỐ TƯƠNG TÁC</span>
+              </div>
+              <h1 className="text-sm sm:text-base md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                Môn học thực hành HTML & CSS <span className="text-xs sm:text-sm font-normal text-slate-400 hidden sm:inline">(Hệ Cao Đẳng)</span>
+              </h1>
+            </div>
           </div>
         </div>
 
@@ -376,22 +402,43 @@ export default function App() {
       {/* Main Container */}
       <div className="flex-1 flex overflow-hidden relative">
         
+        {/* Sidebar Overlay for Mobile */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Toggle Sidebar Button */}
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute left-4 bottom-4 z-40 bg-slate-950 p-2.5 rounded-full border border-slate-800 text-slate-300 shadow-xl hover:text-white transition-all cursor-pointer hover:scale-105 active:scale-95"
+          className="absolute left-4 bottom-4 z-40 bg-slate-950 p-2.5 rounded-full border border-slate-800 text-slate-300 shadow-xl hover:text-white transition-all cursor-pointer hover:scale-105 active:scale-95 hidden lg:block"
           title={isSidebarOpen ? "Thu gọn danh mục" : "Mở rộng danh mục"}
         >
           <Layers className="w-5 h-5" />
         </button>
 
         {/* Sidebar - Syllabus Tree */}
-        <aside className={`${isSidebarOpen ? "w-80" : "w-0"} bg-slate-950 border-r border-slate-800 transition-all duration-300 overflow-y-auto flex flex-col shrink-0`}>
-          <div className="p-4 border-b border-slate-800 bg-slate-900/40">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <BookOpen className="w-3.5 h-3.5" /> MỤC LỤC GIÁO TRÌNH
-            </p>
-            <p className="text-[11px] text-slate-500 leading-relaxed">Chọn bài thực hành để mở trình biên dịch trực tiếp (Try It Yourself)</p>
+        <aside className={`bg-slate-950 border-r border-slate-800 transition-all duration-300 overflow-y-auto flex flex-col shrink-0 
+          fixed lg:static inset-y-0 left-0 z-50 h-full lg:h-auto shadow-2xl lg:shadow-none
+          ${isSidebarOpen ? "w-80 translate-x-0 opacity-100" : "w-0 -translate-x-full lg:translate-x-0 opacity-0 pointer-events-none lg:pointer-events-auto"}`}
+        >
+          <div className="p-4 border-b border-slate-800 bg-slate-900/40 flex justify-between items-center">
+            <div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5" /> MỤC LỤC GIÁO TRÌNH
+              </p>
+              <p className="text-[10px] text-slate-500 leading-relaxed">Chọn bài thực hành để mở trình biên dịch</p>
+            </div>
+            <button 
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white lg:hidden focus:outline-none"
+              aria-label="Đóng danh mục"
+              title="Đóng"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="flex-1 p-3 space-y-4">
@@ -429,6 +476,9 @@ export default function App() {
                                   setActiveLesson(lesson);
                                   setActiveExercise(ex);
                                   setIsWorkspaceOpen(false); // Return to handbook view on selection change for cleanliness
+                                  if (window.innerWidth < 1024) {
+                                    setIsSidebarOpen(false);
+                                  }
                                 }}
                                 className={`w-full text-left text-xs p-2 px-3 rounded-md flex items-center gap-2 transition-all ${
                                   isCurrent 
